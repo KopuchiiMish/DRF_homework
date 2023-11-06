@@ -1,18 +1,24 @@
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 
-from education.models import Course, Lesson, Payment
+from education.models import Course, Lesson, Payment, Subscription
+from education.paginators import Paginator
 from education.permissions import IsNotStaffUser, IsOwnerOrStaffUser
-from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentListSerializer
+from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentListSerializer, \
+    SubscriptionSerializer, SubscriptionListSerializer
+from education.services import subscriptions_update_course_mailing, subscriptions_lesson_mailing, \
+    subscriptions_create_lesson_mailing
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseDetailSerializer
     queryset = Course.objects.all()
     permission_classes = [IsAuthenticated, IsOwnerOrStaffUser]
+    pagination_class = Paginator
 
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -35,6 +41,10 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        serializer.save(owner=self.request.user)
+        subscriptions_update_course_mailing(serializer)
+
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer
@@ -42,10 +52,12 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+        subscriptions_create_lesson_mailing(serializer)
 
 
 class LessonListAPIView(generics.ListCreateAPIView):
     serializer_class = LessonSerializer
+    pagination_class = Paginator
 
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -67,6 +79,10 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
     queryset = Lesson.objects.all()
     permission_classes = [IsOwnerOrStaffUser]
 
+    def perform_update(self, serializer):
+        subscriptions_lesson_mailing(serializer)
+        serializer.save()
+
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
     serializer_class = LessonSerializer
@@ -80,3 +96,31 @@ class PaymentListAPIView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ('course', 'payment_method')
     ordering_fields = ('payment_date',)
+
+
+class SubscriptionCreateAPIView(generics.CreateAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsNotStaffUser]
+
+    def create(self, request, *args, **kwargs):
+        for subscription in Subscription.objects.filter(user=self.request.user):
+            if subscription.course.id == request.data.get('course'):
+                raise PermissionDenied('У вас уже есть подписка на этот курс.')
+        if self.request.user.id != request.data.get('user'):
+            raise PermissionDenied('Нельзя оформлять подписки на другого пользователя.')
+        return super().create(request, *args, **kwargs)
+
+
+class SubscriptionListAPIView(generics.ListAPIView):
+    serializer_class = SubscriptionListSerializer
+
+    def get_queryset(self):
+        return Subscription.objects.filter(user=self.request.user)
+
+
+class SubscriptionDestroyAPIView(generics.DestroyAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsNotStaffUser]
+
+    def get_queryset(self):
+        return Subscription.objects.filter(user=self.request.user)

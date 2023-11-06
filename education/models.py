@@ -37,7 +37,8 @@ class Payment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_payments')
     payment_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата платежа')
     payment_sum = models.PositiveIntegerField(verbose_name='Сумма платежа')
-    payment_method = models.CharField(max_length=500, choices=[('1', 'Наличные'), ('2', 'Перевод')], verbose_name='Метод платежа')
+    payment_method = models.CharField(max_length=500, choices=[('1', 'Наличные'), ('2', 'Перевод')],
+                                      verbose_name='Метод платежа')
 
     def __str__(self):
         return f"{self.user}: {self.course} - {self.payment_date}"
@@ -46,3 +47,15 @@ class Payment(models.Model):
         verbose_name = 'Платеж'
         verbose_name_plural = 'Платежи'
         ordering = ('-payment_date',)
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_subscriptions')
+
+    def __str__(self):
+        return f"{self.user}: {self.course}"
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
