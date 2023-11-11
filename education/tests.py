@@ -1,12 +1,14 @@
 import pytz
+
 from django.urls import reverse
-from django.utils import timezone
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from education.models import Course, Lesson
 from config import settings
+
 from education.models import Course, Lesson, Subscription, Payment
+
 from users.models import User
 
 
@@ -170,7 +172,8 @@ class CoursesAPITestCase(APITestCase):
                                'title': self.course.title,
                                'description': self.course.description,
                                'image': self.course.image,
-                               'owner': self.course.owner.id}
+                               'owner': self.course.owner.id,
+                               'price': self.course.price}
                           ]
                           }
                          )
@@ -188,6 +191,7 @@ class CoursesAPITestCase(APITestCase):
                           'description': self.course.description,
                           'image': self.course.image,
                           'owner': self.course.owner.id,
+                          'price': self.course.price
                           }
                          )
 
@@ -220,6 +224,7 @@ class CoursesAPITestCase(APITestCase):
                           'description': data['description'],
                           'image': self.course.image,
                           'owner': self.course.owner.id,
+                          'price': self.course.price
                           }
                          )
 
@@ -240,23 +245,24 @@ class PaymentAPITestCase(APITestCase):
         self.payment = Payment.objects.create(
             user=self.user,
             course=self.course,
-            payment_sum=4500,
             payment_method='1',
         )
 
     def test_payment_list(self):
         """ Проверка списка оплат """
         response = self.client.get(reverse('payment-list'))
-        print(response.json())
         tz = pytz.timezone(settings.TIME_ZONE)
         self.payment.payment_date = self.payment.payment_date.astimezone(tz)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(),
                          [
-                             {'user': self.payment.user.id,
-                              'course': self.payment.course.id,
-                              'payment_date': self.payment.payment_date.isoformat(),
-                              'payment_sum': self.payment.payment_sum,
-                              'payment_method': self.payment.payment_method
-                              }
+                             {
+                                 'id': self.payment.id,
+                                 'user': self.payment.user.id,
+                                 'course': self.payment.course.id,
+                                 'payment_date': self.payment.payment_date.isoformat(),
+                                 'payment_method': 'Наличные',
+                                 'session': self.payment.session,
+                                 'is_successful': self.payment.is_successful,
+                             }
                          ])
