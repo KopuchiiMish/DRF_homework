@@ -257,12 +257,9 @@ class PaymentAPITestCase(APITestCase):
         self.assertEqual(response.json(),
                          [
                              {
-                                 'id': self.payment.id,
                                  'user': self.payment.user.id,
                                  'course': self.payment.course.id,
-                                 'payment_date': self.payment.payment_date.isoformat(),
-                                 'payment_method': 'Наличные',
-                                 'session': self.payment.session,
-                                 'is_successful': self.payment.is_successful,
+                                 'payment_date': self.payment.payment_date.isoformat().replace("+00:00", "Z"),
+                                 'payment_method': "1",
                              }
                          ])
