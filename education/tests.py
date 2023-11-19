@@ -159,7 +159,6 @@ class CoursesAPITestCase(APITestCase):
     def test_course_list(self):
         """ Проверка списка курсов """
         response = self.client.get('/course/')
-        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(),
                          {'count': 1,
