@@ -159,6 +159,7 @@ class CoursesAPITestCase(APITestCase):
     def test_course_list(self):
         """ Проверка списка курсов """
         response = self.client.get('/course/')
+        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(),
                          {'count': 1,
@@ -257,9 +258,12 @@ class PaymentAPITestCase(APITestCase):
         self.assertEqual(response.json(),
                          [
                              {
+                                 'id': self.payment.id,
                                  'user': self.payment.user.id,
                                  'course': self.payment.course.id,
-                                 'payment_date': self.payment.payment_date.isoformat().replace("+00:00", "Z"),
-                                 'payment_method': "1",
+                                 'payment_date': self.payment.payment_date.isoformat(),
+                                 'payment_method': 'Наличные',
+                                 'session': self.payment.session,
+                                 'is_successful': self.payment.is_successful,
                              }
                          ])
