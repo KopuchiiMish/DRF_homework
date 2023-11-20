@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'education',
     'django_filters',
     'rest_framework_simplejwt',
+    'redis',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -175,3 +177,7 @@ SWAGGER_SETTINGS = {
 }
 
 STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY')
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_TIMEZONE = getenv('TIME_ZONE')
