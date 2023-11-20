@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'education',
     'django_filters',
     'rest_framework_simplejwt',
+    'redis',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -175,3 +177,14 @@ SWAGGER_SETTINGS = {
 }
 
 STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY')
+
+CELERY_BROKER_URL = getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = getenv('CELERY_RESULT_BACKEND')
+CELERY_TIMEZONE = getenv('TIME_ZONE')
+
+CELERY_BEAT_SCHEDULE = {
+    'task-name': {
+        'task': 'education.tasks.check_user_last_login',
+        'schedule': timedelta(days=1),
+    },
+}
