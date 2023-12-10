@@ -1,8 +1,8 @@
 from django.urls import path
 
-from users.views import UserRetrieveAPIView, UserUpdateAPIView
+from users.views import UserRetrieveAPIView, UserUpdateAPIView, UserCreateAPIView
 
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, UserCreateAPIView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('register/', UserCreateAPIView.as_view(), name='user-create'),
